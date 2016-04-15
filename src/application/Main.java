@@ -22,9 +22,14 @@ public class Main extends Application
 	{
 		try
 		{
-			Parent root = FXMLLoader.load (getClass ().getResource ("Webcam.fxml"));
+			FXMLLoader fxmlLoader = new FXMLLoader ();
+			fxmlLoader.setLocation (getClass ().getResource ("Webcam.fxml"));
+			Parent root = fxmlLoader.load ();
+			Controller controller = fxmlLoader.<Controller>getController ();
+			
 			primaryStage.setScene (new Scene (root));
 			primaryStage.show ();
+			primaryStage.setOnCloseRequest ((e) -> controller.stopCamera());
 		}
 		catch (Exception e)
 		{
