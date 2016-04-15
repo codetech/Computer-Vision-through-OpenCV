@@ -87,7 +87,7 @@ public class Controller
 		try
 		{
 			this.timer.shutdown ();
-			this.timer.awaitTermination (33, TimeUnit.MILLISECONDS);
+			this.timer.awaitTermination (17, TimeUnit.MILLISECONDS);
 		}
 		catch (InterruptedException exception)
 		{
