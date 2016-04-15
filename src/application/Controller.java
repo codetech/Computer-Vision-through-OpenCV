@@ -9,10 +9,8 @@ import java.util.concurrent.TimeUnit;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 
-import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -48,7 +46,7 @@ public class Controller
 			{
 				this.cameraActive = true;
 
-				// grab a frame every 33 ms (30 frames/sec)
+				// grab a frame every 16.6666 ms (60 frames/sec)
 				Runnable frameGrabber = new Runnable ()
 				{
 
