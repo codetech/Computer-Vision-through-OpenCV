@@ -9,6 +9,6 @@
       <Button fx:id="toggleCapture" mnemonicParsing="false" onAction="#startCamera" text="Start Camera" BorderPane.alignment="CENTER" />
    </bottom>
    <center>
-      <ImageView fx:id="currentFrame" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER" />
+      <ImageView fx:id="currentFrame" pickOnBounds="true" preserveRatio="true" scaleX="-1.0" BorderPane.alignment="CENTER" />
    </center>
 </BorderPane>
