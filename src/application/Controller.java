@@ -12,6 +12,7 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -73,64 +74,70 @@ public class Controller
 		}
 		else
 		{
-			// the camera is not active at this point
-			this.cameraActive = false;
-			// update again the button content
-			this.toggleCapture.setText ("Start Camera");
-
-			// stop the timer
-			try
-			{
-				this.timer.shutdown ();
-				this.timer.awaitTermination (33, TimeUnit.MILLISECONDS);
-			}
-			catch (InterruptedException exception)
-			{
-				// log the exception
-				System.err.println ("Exception in stopping the frame capture, trying to release the camera now... " + exception);
-			}
-
-			// release the camera
-			this.capture.release ();
-			// clean the frame
-			this.currentFrame.setImage (null);
+			stopCamera ();
 		}
 	}
-	
-	private Image grabFrame()
+
+	public void stopCamera ()
+	{
+		// the camera is not active at this point
+		this.cameraActive = false;
+		// update again the button content
+		this.toggleCapture.setText ("Start Camera");
+
+		// stop the timer
+		try
+		{
+			this.timer.shutdown ();
+			this.timer.awaitTermination (33, TimeUnit.MILLISECONDS);
+		}
+		catch (InterruptedException exception)
+		{
+			// log the exception
+			System.err.println (
+					"Exception in stopping the frame capture, trying to release the camera now... " + exception);
+		}
+
+		// release the camera
+		this.capture.release ();
+		// clean the frame
+		this.currentFrame.setImage (null);
+	}
+
+	private Image grabFrame ()
 	{
 		// init everything
 		Image imageToShow = null;
-		Mat frame = new Mat();
-		
+		Mat frame = new Mat ();
+
 		// check if the capture is open
-		if (this.capture.isOpened())
+		if (this.capture.isOpened ())
 		{
 			try
 			{
 				// read the current frame
-				this.capture.read(frame);
-				
+				this.capture.read (frame);
+
 				// if the frame is not empty, process it
-				if (!frame.empty())
+				if (!frame.empty ())
 				{
 					// convert the image to gray scale
-					Imgproc.cvtColor(frame, frame, Imgproc.COLOR_BGR2RGB);
+					// Imgproc.cvtColor(frame, frame, Imgproc.COLOR_BGR2RGB);
 					// convert the Mat object (OpenCV) to Image (JavaFX)
-					imageToShow = mat2Image(frame);
+					imageToShow = mat2Image (frame);
 				}
-				
+
 			}
 			catch (Exception e)
 			{
 				// log the error
-				System.err.println("Exception during the image elaboration: " + e);
+				System.err.println ("Exception during the image elaboration: " + e);
 			}
 		}
-		
+
 		return imageToShow;
 	}
-	
+
 	/**
 	 * Convert a Mat object (OpenCV) in the corresponding Image for JavaFX
 	 * 
@@ -138,15 +145,15 @@ public class Controller
 	 *            the {@link Mat} representing the current frame
 	 * @return the {@link Image} to show
 	 */
-	private Image mat2Image(Mat frame)
+	private Image mat2Image (Mat frame)
 	{
 		// create a temporary buffer
-		MatOfByte buffer = new MatOfByte();
+		MatOfByte buffer = new MatOfByte ();
 		// encode the frame in the buffer
-		Imgcodecs.imencode(".png", frame, buffer);
+		Imgcodecs.imencode (".png", frame, buffer);
 		// build and return an Image created from the image encoded in the
 		// buffer
-		return new Image(new ByteArrayInputStream(buffer.toArray()));
-}
+		return new Image (new ByteArrayInputStream (buffer.toArray ()));
+	}
 
 }
