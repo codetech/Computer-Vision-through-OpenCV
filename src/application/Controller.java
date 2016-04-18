@@ -28,7 +28,7 @@ public class Controller
 	private ScheduledExecutorService	timer;
 	private VideoCapture				capture			= new VideoCapture ();
 	private boolean						cameraActive	= false;
-	private EyeReplacer					eyeReplacer;
+	private EyeOverlay					eyeReplacer;
 
 	@FXML
 	private void initialize ()
@@ -207,12 +207,12 @@ public class Controller
 		return cameraActive;
 	}
 
-	public EyeReplacer getEyeReplacer ()
+	public EyeOverlay getEyeReplacer ()
 	{
 		return eyeReplacer;
 	}
 
-	public void setEyeReplacer (EyeReplacer eyeReplacer)
+	public void setEyeReplacer (EyeOverlay eyeReplacer)
 	{
 		this.eyeReplacer = eyeReplacer;
 	}
