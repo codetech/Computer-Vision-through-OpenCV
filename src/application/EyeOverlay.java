@@ -1,4 +1,3 @@
-
 package application;
 
 import static java.lang.Math.abs;
@@ -16,6 +15,8 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
+
+//Based on http://synaptitude.me/blog/smooth-face-tracking-using-opencv/
 
 public class EyeOverlay
 {
@@ -47,9 +48,18 @@ public class EyeOverlay
 
 			if (lastEyeL != null)
 			{
+				Point eyeCenterL = rectCenter (lastEyeL);
 				gc.setStroke (Color.BLUE);
 				gc.strokeRect (lastFace.x + lastEyeL.x, lastFace.y + lastEyeL.y, lastEyeL.width, lastEyeL.height);
-//		gc.drawImage (eyeReplace, faceRect.x + eyeRect.x, faceRect.y + eyeRect.y, 100, 100);
+				
+				double aspectRatio = eyeOverlay.getWidth () / eyeOverlay.getHeight ();
+				double w = 100;
+				double h = w / aspectRatio;
+				
+				double x = lastFace.x + eyeCenterL.x - w / 2;
+				double y = lastFace.y + eyeCenterL.y - h;
+						
+				gc.drawImage (eyeOverlay, x, y, w, h);
 			}
 		
 			if (lastEyeR != null)
@@ -91,17 +101,14 @@ public class EyeOverlay
 			
 			eyeDetector.detectMultiScale (face, eyeDetections, 1.1, 3,  0 | Objdetect.CASCADE_SCALE_IMAGE, new Size(30, 30), new Size (1000, 1000));
 			
-//			Rect[] eyes = eyeDetections.toArray ();
-//			for (int i = 0; i < 2 && i < eyeDetections.total (); ++i)
 			for(Rect eyeRect : eyeDetections.toArray ())
 			{
-//				Rect eyeRect = eyes[i];
 				
 				Point centerFace = rectCenter (faceRect);
 				
 				//my left, comps right
 //				System.out.println ("Center: " + centerFace);
-				if (faceRect.y + eyeRect.y + eyeRect.height < centerFace.y)
+				if (faceRect.y + eyeRect.y + eyeRect.height < centerFace.y && eyeRect.area () < faceRect.area () / 6)
 				{
 					if (faceRect.x + eyeRect.x + eyeRect.width < centerFace.x)
 					{
@@ -111,7 +118,7 @@ public class EyeOverlay
 						}
 						else
 						{
-							lastEyeR = updateRect (eyeRect, lastEyeR, faceRect.size (), 6, 10);
+							lastEyeR = updateRect (eyeRect, lastEyeR, faceRect.size (), 6, 15);
 //							System.out.println ("EYE_R: " + eyeRect);
 						}
 					}
@@ -123,7 +130,7 @@ public class EyeOverlay
 						}
 						else
 						{
-							lastEyeL = updateRect (eyeRect, lastEyeL, faceRect.size (), 6, 10);
+							lastEyeL = updateRect (eyeRect, lastEyeL, faceRect.size (), 6, 15);
 //							System.out.println ("EYE_L: " + eyeRect);
 						}
 					}
