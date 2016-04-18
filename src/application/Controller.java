@@ -42,7 +42,7 @@ public class Controller
 	{
 		if (!this.cameraActive)
 		{
-			// start the video capture
+			// start the video capture with default camera
 			this.capture.open (0);
 
 			// is the video stream available?
@@ -62,6 +62,7 @@ public class Controller
 						currentFrame.setImage (imageToShow);
 						eyeReplacer.overlayEyes (frame);
 						
+						//make sure canvas covers image precisely
 						if(currentFrame.getFitWidth () == 0)
 							overlayCanvas.setWidth (currentFrame.getImage ().getWidth ());
 						else 
@@ -113,7 +114,6 @@ public class Controller
 					"Exception in stopping the frame capture, trying to release the camera now... " + exception);
 		}
 
-		// release the camera
 		this.capture.release ();
 		// clean the frame
 		this.currentFrame.setImage (null);
@@ -121,21 +121,16 @@ public class Controller
 
 	private Mat grabFrame ()
 	{
-		// init everything
 		Mat frame = new Mat ();
 
-		// check if the capture is open
 		if (this.capture.isOpened ())
 		{
 			try
 			{
-				// read the current frame
 				this.capture.read (frame);
 
-				// if the frame is not empty, process it
 				if (frame.empty ())
 				{
-					// convert the image to gray scale
 					// Imgproc.cvtColor(frame, frame, Imgproc.COLOR_BGR2RGB);
 					// convert the Mat object (OpenCV) to Image (JavaFX)
 					// imageToShow = mat2Image (frame);
