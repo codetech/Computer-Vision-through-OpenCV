@@ -76,7 +76,7 @@ public class EyeOverlay
 				
 				eyeCenterL = rectCenter (lastEyeL);
 				
-				wL = 4 * lastEyeL.width;
+				wL = 6 * lastEyeL.width;
 				hL = wL / aspectRatio;
 				 
 				xL = lastFace.x + eyeCenterL.x - wL / 2 + 8;
@@ -91,7 +91,7 @@ public class EyeOverlay
 				
 				eyeCenterR = rectCenter (lastEyeR);
 				
-				wR = 4 * lastEyeR.width;
+				wR = 6 * lastEyeR.width;
 				hR = wR / aspectRatio;
 				
 				xR = lastFace.x + eyeCenterR.x - wR / 2 + 8;
@@ -131,7 +131,7 @@ public class EyeOverlay
 		MatOfRect faceDetections = new MatOfRect ();
 		MatOfRect eyeDetections = new MatOfRect ();
 		
-		faceDetector.detectMultiScale (frame, faceDetections, 1.1, 3, 0 | Objdetect.CASCADE_SCALE_IMAGE, new Size(30, 30), new Size (1000, 1000));
+		faceDetector.detectMultiScale (frame, faceDetections, 1.1, 3, Objdetect.CASCADE_SCALE_IMAGE, new Size(30, 30), new Size (1000, 1000));
 
 		System.out.println (String.format ("Detected %s faces", faceDetections.total ()));
 
@@ -149,7 +149,7 @@ public class EyeOverlay
 				lastFace = updateRect (faceRect, lastFace, frame.size (), 6, 7);
 			}
 			
-			eyeDetector.detectMultiScale (face, eyeDetections, 1.1, 3,  0 | Objdetect.CASCADE_SCALE_IMAGE, new Size(30, 30), new Size (1000, 1000));
+			eyeDetector.detectMultiScale (face, eyeDetections, 1.1, 3, Objdetect.CASCADE_SCALE_IMAGE, new Size(30, 30), new Size (1000, 1000));
 			
 			for(Rect eyeRect : eyeDetections.toArray ())
 			{
@@ -168,7 +168,7 @@ public class EyeOverlay
 						}
 						else if (eyeRect.area() / lastEyeL.area () < 1.3 && eyeRect.area() / lastEyeL.area () > 0.7)
 						{
-							lastEyeR = updateRect (eyeRect, lastEyeR, faceRect.size (), 6, 7);
+							lastEyeR = updateRect (eyeRect, lastEyeR, faceRect.size (), 6, 14);
 //							System.out.println ("EYE_R: " + eyeRect);
 						}
 					}
@@ -180,7 +180,7 @@ public class EyeOverlay
 						}
 						else if (eyeRect.area() / lastEyeR.area () < 1.3 && eyeRect.area() / lastEyeR.area () > 0.7)
 						{
-							lastEyeL = updateRect (eyeRect, lastEyeL, faceRect.size (), 6, 7);
+							lastEyeL = updateRect (eyeRect, lastEyeL, faceRect.size (), 6, 14);
 //							System.out.println ("EYE_L: " + eyeRect);
 						}
 					}
