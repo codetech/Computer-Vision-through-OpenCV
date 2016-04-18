@@ -1,7 +1,7 @@
 
 package application;
 
-import static java.lang.Math.*;
+import static java.lang.Math.abs;
 
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
@@ -15,13 +15,14 @@ import org.opencv.objdetect.Objdetect;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
 
 public class EyeOverlay
 {
 	private GraphicsContext	gc;
 	private Image			eyeOverlay;
-	private Rect			lastFace;
-	private Rect			lastEyeL, lastEyeR;
+	private Rect			lastFace;			// relative to frame
+	private Rect			lastEyeL, lastEyeR;	// relative to face
 
 	public EyeOverlay (Canvas overlayCanvas, Image eyeOverlay)
 	{
@@ -30,6 +31,36 @@ public class EyeOverlay
 	}
 
 	public void overlayEyes (Mat frame)
+	{
+		detectFace (frame);
+
+		gc.clearRect (0, 0, gc.getCanvas ().getWidth (), gc.getCanvas ().getHeight ());
+
+		if (lastFace != null)
+		{
+			gc.setStroke (Color.DARKGREEN);
+			gc.strokeRect (lastFace.x, lastFace.y, lastFace.width, lastFace.height);
+
+			Point centerFace = rectCenter (lastFace);
+			gc.setStroke (Color.DARKMAGENTA);
+			gc.strokeOval (centerFace.x - 10, centerFace.y - 10, 10, 10);
+
+			if (lastEyeL != null)
+			{
+				gc.setStroke (Color.BLUE);
+				gc.strokeRect (lastFace.x + lastEyeL.x, lastFace.y + lastEyeL.y, lastEyeL.width, lastEyeL.height);
+//		gc.drawImage (eyeReplace, faceRect.x + eyeRect.x, faceRect.y + eyeRect.y, 100, 100);
+			}
+		
+			if (lastEyeR != null)
+			{
+				gc.setStroke (Color.RED);
+				gc.strokeRect (lastFace.x + lastEyeR.x, lastFace.y + lastEyeR.y, lastEyeR.width, lastEyeR.height);
+			}
+		}
+	}
+	
+	private void detectFace(Mat frame)
 	{
 		Imgproc.cvtColor (frame, frame, Imgproc.COLOR_BGR2GRAY);
 		Imgproc.equalizeHist (frame, frame);
@@ -44,7 +75,6 @@ public class EyeOverlay
 
 		System.out.println (String.format ("Detected %s faces", faceDetections.total ()));
 
-		gc.clearRect (0, 0, gc.getCanvas ().getWidth (), gc.getCanvas ().getHeight ());
 
 		for (Rect faceRect : faceDetections.toArray ())
 		{
@@ -53,60 +83,53 @@ public class EyeOverlay
 			if (lastFace == null)
 			{
 				lastFace = faceRect;
-				break;
 			}
 			else
 			{
-				updateRect (faceRect, lastFace, frame.size (), 6, 7);
+				lastFace = updateRect (faceRect, lastFace, frame.size (), 6, 7);
 			}
-
-			gc.strokeRect (faceRect.x, faceRect.y, faceRect.width, faceRect.height);
 			
 			eyeDetector.detectMultiScale (face, eyeDetections, 1.1, 3,  0 | Objdetect.CASCADE_SCALE_IMAGE, new Size(30, 30), new Size (1000, 1000));
 			
-			for (Rect eyeRect : eyeDetections.toArray ())
+//			Rect[] eyes = eyeDetections.toArray ();
+//			for (int i = 0; i < 2 && i < eyeDetections.total (); ++i)
+			for(Rect eyeRect : eyeDetections.toArray ())
 			{
+//				Rect eyeRect = eyes[i];
+				
 				Point centerFace = rectCenter (faceRect);
 				
-				gc.strokeOval (centerFace.x - 10, centerFace.y - 10, 10, 10);
-				
-				if (lastFace == null)
-				{
-					lastFace = faceRect;
-					break;
-				}
-				
 				//my left, comps right
-				if(eyeRect.x > centerFace.x)
+//				System.out.println ("Center: " + centerFace);
+				if (faceRect.y + eyeRect.y + eyeRect.height < centerFace.y)
 				{
-					if(lastEyeR == null)
+					if (faceRect.x + eyeRect.x + eyeRect.width < centerFace.x)
 					{
-						lastEyeR = eyeRect;
+						if (lastEyeR == null)
+						{
+							lastEyeR = eyeRect;
+						}
+						else
+						{
+							lastEyeR = updateRect (eyeRect, lastEyeR, faceRect.size (), 6, 10);
+//							System.out.println ("EYE_R: " + eyeRect);
+						}
 					}
-					else
+					else if (faceRect.x + eyeRect.x > centerFace.x)
 					{
-						updateRect (eyeRect, lastEyeR, frame.size (), 10, 15);
-						System.out.println ("EYE_R: " + eyeRect);
+						if (lastEyeL == null)
+						{
+							lastEyeL = eyeRect;
+						}
+						else
+						{
+							lastEyeL = updateRect (eyeRect, lastEyeL, faceRect.size (), 6, 10);
+//							System.out.println ("EYE_L: " + eyeRect);
+						}
 					}
 				}
-				else
-				{
-					if(lastEyeL == null)
-					{
-						lastEyeL = eyeRect;
-					}
-					else
-					{
-						updateRect(eyeRect, lastEyeL, frame.size (), 10, 15);
-						System.out.println ("EYE_L: " + eyeRect);
-					}
-				}
-				
-				gc.strokeRect (faceRect.x + eyeRect.x, faceRect.y + eyeRect.y, eyeRect.width, eyeRect.height);
-//				gc.drawImage (eyeReplace, faceRect.x + eyeRect.x, faceRect.y + eyeRect.y, 100, 100);
 			}
 		}
-
 	}
 	
 	public static Point rectCenter(Rect rect)
@@ -114,7 +137,8 @@ public class EyeOverlay
 		return new Point(rect.x + rect.width / 2.0, rect.y + rect.height / 2.0);
 	}
 	
-	public static void updateRect(Rect cur, Rect last, Size frameSize , double maxDistFrameDivisor, double pixelThresholdToNotRevertCurToLast)
+	//Returns cur (could be cur as passed in or cur could be set to last)
+	public static Rect updateRect(Rect cur, Rect last, Size frameSize , double maxDistFrameDivisor, double pixelThresholdToNotRevertCurToLast)
 	{
 		if (abs (cur.x - last.x) < frameSize.width / maxDistFrameDivisor
 				&& abs (cur.y - last.y) < frameSize.height / maxDistFrameDivisor)
@@ -127,5 +151,7 @@ public class EyeOverlay
 				cur = last;
 			}
 		}
+		
+		return cur;
 	}
 }
