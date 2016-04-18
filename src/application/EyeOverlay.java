@@ -42,30 +42,43 @@ public class EyeOverlay
 			gc.setStroke (Color.DARKGREEN);
 			gc.strokeRect (lastFace.x, lastFace.y, lastFace.width, lastFace.height);
 
-			Point centerFace = rectCenter (lastFace);
-			gc.setStroke (Color.DARKMAGENTA);
-			gc.strokeOval (centerFace.x - 10, centerFace.y - 10, 10, 10);
+//			Point centerFace = rectCenter (lastFace);
+//			gc.setStroke (Color.DARKMAGENTA);
+//			gc.strokeOval (centerFace.x - 10, centerFace.y - 10, 10, 10);
 
+			
+			double aspectRatio = eyeOverlay.getWidth () / eyeOverlay.getHeight ();
+			
 			if (lastEyeL != null)
 			{
-				Point eyeCenterL = rectCenter (lastEyeL);
-				gc.setStroke (Color.BLUE);
-				gc.strokeRect (lastFace.x + lastEyeL.x, lastFace.y + lastEyeL.y, lastEyeL.width, lastEyeL.height);
+//				gc.setStroke (Color.BLUE);
+//				gc.strokeRect (lastFace.x + lastEyeL.x, lastFace.y + lastEyeL.y, lastEyeL.width, lastEyeL.height);
 				
-				double aspectRatio = eyeOverlay.getWidth () / eyeOverlay.getHeight ();
-				double w = 100;
+				Point eyeCenterL = rectCenter (lastEyeL);
+				
+				double w = 4 * lastEyeL.width;
 				double h = w / aspectRatio;
 				
-				double x = lastFace.x + eyeCenterL.x - w / 2;
-				double y = lastFace.y + eyeCenterL.y - h;
+				double x = lastFace.x + eyeCenterL.x - w / 2 + 8;
+				double y = lastFace.y + eyeCenterL.y + lastEyeL.height - h ;
 						
 				gc.drawImage (eyeOverlay, x, y, w, h);
 			}
 		
 			if (lastEyeR != null)
 			{
-				gc.setStroke (Color.RED);
-				gc.strokeRect (lastFace.x + lastEyeR.x, lastFace.y + lastEyeR.y, lastEyeR.width, lastEyeR.height);
+//				gc.setStroke (Color.RED);
+//				gc.strokeRect (lastFace.x + lastEyeR.x, lastFace.y + lastEyeR.y, lastEyeR.width, lastEyeR.height);
+				
+				Point eyeCenterR = rectCenter (lastEyeR);
+				
+				double w = 4 * lastEyeR.width;
+				double h = w / aspectRatio;
+				
+				double x = lastFace.x + eyeCenterR.x - w / 2 + 8;
+				double y = lastFace.y + eyeCenterR.y + lastEyeR.height - h ;
+						
+				gc.drawImage (eyeOverlay, x, y, w, h);
 			}
 		}
 	}
@@ -116,9 +129,9 @@ public class EyeOverlay
 						{
 							lastEyeR = eyeRect;
 						}
-						else
+						else if (eyeRect.area() / lastEyeL.area () < 1.3 && eyeRect.area() / lastEyeL.area () > 0.7)
 						{
-							lastEyeR = updateRect (eyeRect, lastEyeR, faceRect.size (), 6, 15);
+							lastEyeR = updateRect (eyeRect, lastEyeR, faceRect.size (), 6, 7);
 //							System.out.println ("EYE_R: " + eyeRect);
 						}
 					}
@@ -128,9 +141,9 @@ public class EyeOverlay
 						{
 							lastEyeL = eyeRect;
 						}
-						else
+						else if (eyeRect.area() / lastEyeR.area () < 1.3 && eyeRect.area() / lastEyeR.area () > 0.7)
 						{
-							lastEyeL = updateRect (eyeRect, lastEyeL, faceRect.size (), 6, 15);
+							lastEyeL = updateRect (eyeRect, lastEyeL, faceRect.size (), 6, 7);
 //							System.out.println ("EYE_L: " + eyeRect);
 						}
 					}
