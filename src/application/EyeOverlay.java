@@ -1,6 +1,6 @@
 package application;
 
-import static java.lang.Math.abs;
+import static java.lang.Math.*;
 
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
@@ -15,11 +15,14 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
+import javafx.scene.transform.Rotate;
 
 //Based on http://synaptitude.me/blog/smooth-face-tracking-using-opencv/
 
 public class EyeOverlay
 {
+	public final static String HAAR_CASCADES_FOLDER = "D:/External Libraries/opencv/sources/data/haarcascades_cuda";
+	
 	private GraphicsContext	gc;
 	private Image			eyeOverlay;
 	private Rect			lastFace;			// relative to frame
@@ -49,20 +52,36 @@ public class EyeOverlay
 			
 			double aspectRatio = eyeOverlay.getWidth () / eyeOverlay.getHeight ();
 			
+			double wL, wR, hL, hR, xL, xR, yL, yR;
+			Point eyeCenterL, eyeCenter, eyeCenterR;
+			
+			wL = 0;
+			wR = 0;
+			hL = 0;
+			hR = 0;
+			xL = 0;
+			xR = 0;
+			yL = 0;
+			yR = 0;
+			
+			eyeCenterL = null;
+			eyeCenter = null;
+			eyeCenterR = null;
+			
+			
 			if (lastEyeL != null)
 			{
 //				gc.setStroke (Color.BLUE);
 //				gc.strokeRect (lastFace.x + lastEyeL.x, lastFace.y + lastEyeL.y, lastEyeL.width, lastEyeL.height);
 				
-				Point eyeCenterL = rectCenter (lastEyeL);
+				eyeCenterL = rectCenter (lastEyeL);
 				
-				double w = 4 * lastEyeL.width;
-				double h = w / aspectRatio;
+				wL = 4 * lastEyeL.width;
+				hL = wL / aspectRatio;
+				 
+				xL = lastFace.x + eyeCenterL.x - wL / 2 + 8;
+				yL = lastFace.y + eyeCenterL.y + lastEyeL.height - hL ;
 				
-				double x = lastFace.x + eyeCenterL.x - w / 2 + 8;
-				double y = lastFace.y + eyeCenterL.y + lastEyeL.height - h ;
-						
-				gc.drawImage (eyeOverlay, x, y, w, h);
 			}
 		
 			if (lastEyeR != null)
@@ -70,15 +89,33 @@ public class EyeOverlay
 //				gc.setStroke (Color.RED);
 //				gc.strokeRect (lastFace.x + lastEyeR.x, lastFace.y + lastEyeR.y, lastEyeR.width, lastEyeR.height);
 				
-				Point eyeCenterR = rectCenter (lastEyeR);
+				eyeCenterR = rectCenter (lastEyeR);
 				
-				double w = 4 * lastEyeR.width;
-				double h = w / aspectRatio;
+				wR = 4 * lastEyeR.width;
+				hR = wR / aspectRatio;
 				
-				double x = lastFace.x + eyeCenterR.x - w / 2 + 8;
-				double y = lastFace.y + eyeCenterR.y + lastEyeR.height - h ;
+				xR = lastFace.x + eyeCenterR.x - wR / 2 + 8;
+				yR = lastFace.y + eyeCenterR.y + lastEyeR.height - hR ;
 						
-				gc.drawImage (eyeOverlay, x, y, w, h);
+			}
+			
+			if (eyeCenterL != null && eyeCenterR != null)
+			{
+				eyeCenter = new Point ((eyeCenterL.x + eyeCenterR.x) / 2.0, (eyeCenterL.y + eyeCenterR.y) / 2.0);
+				
+				double angleL = toDegrees (atan2 (eyeCenterL.y - eyeCenter.y, eyeCenterL.x - eyeCenter.x));
+				double angleR = toDegrees (atan2 (eyeCenter.y - eyeCenterR.y, eyeCenter.x - eyeCenterR.x));
+				
+				drawRotatedImage(gc, eyeOverlay, xL, yL, angleL, eyeCenterL.x, eyeCenterL.x, wL, hL);
+				drawRotatedImage(gc, eyeOverlay, xR, yR, angleR, eyeCenterR.x, eyeCenterR.x, wR, hR);
+			}
+			else if (eyeCenterL != null)
+			{
+				gc.drawImage (eyeOverlay, xL, yL, wL, hL);
+			}
+			else if (eyeCenterR != null)
+			{
+				gc.drawImage (eyeOverlay, xR, yR, wR, hR);
 			}
 		}
 	}
@@ -88,8 +125,8 @@ public class EyeOverlay
 		Imgproc.cvtColor (frame, frame, Imgproc.COLOR_BGR2GRAY);
 		Imgproc.equalizeHist (frame, frame);
 		
-		CascadeClassifier faceDetector = new CascadeClassifier ("D:/External Libraries/opencv/sources/data/haarcascades_cuda/haarcascade_frontalface_default.xml");
-		CascadeClassifier eyeDetector  = new CascadeClassifier ("D:/External Libraries/opencv/sources/data/haarcascades_cuda/haarcascade_eye.xml");
+		CascadeClassifier faceDetector = new CascadeClassifier (HAAR_CASCADES_FOLDER + "/haarcascade_frontalface_default.xml");
+		CascadeClassifier eyeDetector  = new CascadeClassifier (HAAR_CASCADES_FOLDER + "/haarcascade_eye.xml");
 
 		MatOfRect faceDetections = new MatOfRect ();
 		MatOfRect eyeDetections = new MatOfRect ();
@@ -173,5 +210,22 @@ public class EyeOverlay
 		}
 		
 		return cur;
+	}
+	
+	//http://stackoverflow.com/a/18262938/5900241
+	// angle in degrees
+	public static void rotate(GraphicsContext gc, Double angle, double pivotX, double pivotY)
+	{
+		Rotate r = new Rotate(angle, pivotX, pivotY);
+        gc.setTransform(r.getMxx(), r.getMyx(), r.getMxy(), r.getMyy(), r.getTx(), r.getTy());
+	}
+	
+	//based on http://stackoverflow.com/a/18262938/5900241
+	// angle in degrees
+	private void drawRotatedImage(GraphicsContext gc, Image image, double x, double y, double angle, double pivotX, double pivotY, double width, double height) {
+	    gc.save(); // saves the current state on stack, including the current transform
+		rotate (gc, angle, pivotX, pivotY);
+		gc.drawImage(image, x, y, width, height);
+	    gc.restore(); // back to original state (before rotation)
 	}
 }
