@@ -13,24 +13,29 @@ import org.opencv.videoio.VideoCapture;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.StackPane;
 
 public class Controller
 {
 	@FXML private Button				toggleCapture;
 	@FXML private ImageView				currentFrame;
+	@FXML private Canvas				overlayCanvas;
 
 	private ScheduledExecutorService	timer;
 	private VideoCapture				capture			= new VideoCapture ();
 	private boolean						cameraActive	= false;
+	private EyeReplacer					eyeReplacer;
 
 	@FXML
 	private void initialize ()
 	{
 		assert toggleCapture != null : "fx:id=\"toggleCapture\" was not injected: check your FXML file 'Webcam.fxml'.";
 		assert currentFrame != null : "fx:id=\"currentFrame\" was not injected: check your FXML file 'Webcam.fxml'.";
+		assert overlayCanvas != null : "fx:id=\"overlayCanvas\" was not injected: check your FXML file 'Webcam.fxml'.";
 	}
 
 	@FXML
@@ -53,8 +58,21 @@ public class Controller
 					@Override
 					public void run ()
 					{
-						Image imageToShow = grabFrame ();
+						Mat frame = grabFrame ();
+						Image imageToShow = mat2Image (frame);
 						currentFrame.setImage (imageToShow);
+						eyeReplacer.overlayEyes (frame);
+						
+						if(currentFrame.getFitWidth () == 0)
+							overlayCanvas.setWidth (currentFrame.getImage ().getWidth ());
+						else 
+							overlayCanvas.setWidth (currentFrame.getFitWidth ());
+						
+						
+						if(currentFrame.getFitHeight () == 0)
+							overlayCanvas.setHeight (currentFrame.getImage ().getHeight ());
+						else 
+							overlayCanvas.setHeight (currentFrame.getFitHeight ());
 					}
 				};
 
@@ -102,10 +120,9 @@ public class Controller
 		this.currentFrame.setImage (null);
 	}
 
-	private Image grabFrame ()
+	private Mat grabFrame ()
 	{
 		// init everything
-		Image imageToShow = null;
 		Mat frame = new Mat ();
 
 		// check if the capture is open
@@ -117,12 +134,13 @@ public class Controller
 				this.capture.read (frame);
 
 				// if the frame is not empty, process it
-				if (!frame.empty ())
+				if (frame.empty ())
 				{
 					// convert the image to gray scale
 					// Imgproc.cvtColor(frame, frame, Imgproc.COLOR_BGR2RGB);
 					// convert the Mat object (OpenCV) to Image (JavaFX)
-					imageToShow = mat2Image (frame);
+					// imageToShow = mat2Image (frame);
+					frame = null;
 				}
 
 			}
@@ -133,7 +151,7 @@ public class Controller
 			}
 		}
 
-		return imageToShow;
+		return frame;
 	}
 
 	/**
@@ -154,4 +172,48 @@ public class Controller
 		return new Image (new ByteArrayInputStream (buffer.toArray ()));
 	}
 
+	public Canvas getOverlayCanvas ()
+	{
+		return overlayCanvas;
+	}
+
+	public VideoCapture getCapture ()
+	{
+		return capture;
+	}
+
+	public void setCapture (VideoCapture capture)
+	{
+		this.capture = capture;
+	}
+
+	public Button getToggleCapture ()
+	{
+		return toggleCapture;
+	}
+
+	public ImageView getCurrentFrame ()
+	{
+		return currentFrame;
+	}
+
+	public ScheduledExecutorService getTimer ()
+	{
+		return timer;
+	}
+
+	public boolean isCameraActive ()
+	{
+		return cameraActive;
+	}
+
+	public EyeReplacer getEyeReplacer ()
+	{
+		return eyeReplacer;
+	}
+
+	public void setEyeReplacer (EyeReplacer eyeReplacer)
+	{
+		this.eyeReplacer = eyeReplacer;
+	}
 }
